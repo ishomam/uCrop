@@ -3,16 +3,23 @@ package com.yalantis.ucrop.view;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.util.AttributeSet;
 
+import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.yalantis.ucrop.R;
 import com.yalantis.ucrop.callback.BitmapCropCallback;
+import com.yalantis.ucrop.callback.BitmapCropDetailsCallback;
 import com.yalantis.ucrop.callback.CropBoundsChangeListener;
 import com.yalantis.ucrop.model.CropParameters;
+import com.yalantis.ucrop.model.ExifInfo;
 import com.yalantis.ucrop.model.ImageState;
 import com.yalantis.ucrop.task.BitmapCropTask;
 import com.yalantis.ucrop.util.CubicEasing;
@@ -20,10 +27,6 @@ import com.yalantis.ucrop.util.RectUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
-
-import androidx.annotation.IntRange;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * Created by Oleksii Shliama (https://github.com/shliama).
@@ -66,10 +69,62 @@ public class CropImageView extends TransformImageView {
         super(context, attrs, defStyle);
     }
 
-    /**
-     * Cancels all current animations and sets image to fill crop area (without animation).
-     * Then creates and executes {@link BitmapCropTask} with proper parameters.
-     */
+    // Added by Homam
+    public void returnCropDetails(@Nullable BitmapCropDetailsCallback cropDetailsCallback) {
+        cancelAllAnimations();
+        setImageToWrapCropBounds(false);
+
+        float currentScale = getCurrentScale();
+        currentScale = resizeCurrentScale(currentScale);
+
+        RectF currentImageRect = RectUtils.trapToRect(mCurrentImageCorners);
+
+        int cropOffsetX = Math.round((mCropRect.left - currentImageRect.left) / currentScale);
+        int cropOffsetY = Math.round((mCropRect.top - currentImageRect.top) / currentScale);
+        int croppedImageWidth = Math.round(mCropRect.width() / currentScale);
+        int croppedImageHeight = Math.round(mCropRect.height() / currentScale);
+
+        if (cropDetailsCallback != null) {
+            cropDetailsCallback.onCropDetailsRetrieved(cropOffsetX, cropOffsetY, croppedImageWidth,
+                    croppedImageHeight);
+        }
+    }
+
+    // Added by Homam
+    private float resizeCurrentScale(float currentScale) {
+        ExifInfo exifInfo = getExifInfo();
+        Bitmap viewBitmap = getViewBitmap();
+        String imageInputPath = getImageInputPath();
+
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(imageInputPath, options);
+
+        boolean swapSides = exifInfo.getExifDegrees() == 90 || exifInfo.getExifDegrees() == 270;
+        float scaleX = (swapSides ? options.outHeight : options.outWidth) / (float) viewBitmap.getWidth();
+        float scaleY = (swapSides ? options.outWidth : options.outHeight) / (float) viewBitmap.getHeight();
+
+        float resizeScale = Math.min(scaleX, scaleY);
+
+        currentScale /= resizeScale;
+
+        resizeScale = 1;
+        if (mMaxResultImageSizeX > 0 && mMaxResultImageSizeY > 0) {
+            float cropWidth = mCropRect.width() / currentScale;
+            float cropHeight = mCropRect.height() / currentScale;
+
+            if (cropWidth > mMaxResultImageSizeX || cropHeight > mMaxResultImageSizeY) {
+
+                scaleX = mMaxResultImageSizeX / cropWidth;
+                scaleY = mMaxResultImageSizeY / cropHeight;
+                resizeScale = Math.min(scaleX, scaleY);
+
+                currentScale /= resizeScale;
+            }
+        }
+        return currentScale;
+    }
+
     public void cropAndSaveImage(@NonNull Bitmap.CompressFormat compressFormat, int compressQuality,
                                  @Nullable BitmapCropCallback cropCallback) {
         cancelAllAnimations();

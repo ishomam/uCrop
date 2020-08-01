@@ -26,6 +26,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.yalantis.ucrop.callback.BitmapCropCallback;
+import com.yalantis.ucrop.callback.BitmapCropDetailsCallback;
 import com.yalantis.ucrop.model.AspectRatio;
 import com.yalantis.ucrop.util.SelectedStateListDrawable;
 import com.yalantis.ucrop.view.CropImageView;
@@ -116,6 +117,9 @@ public class UCropActivity extends AppCompatActivity {
     private int mCompressQuality = DEFAULT_COMPRESS_QUALITY;
     private int[] mAllowedGestures = new int[]{SCALE, ROTATE, ALL};
 
+
+    private Uri outputUri;
+
     static {
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
     }
@@ -173,7 +177,11 @@ public class UCropActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_crop) {
-            cropAndSaveImage();
+            if (outputUri == null) {
+                returnCropDetailsAndFinishActivity();
+            } else {
+                cropAndSaveImage();
+            }
             return true;
         } else if (item.getItemId() == android.R.id.home) {
             onBackPressed();
@@ -195,10 +203,10 @@ public class UCropActivity extends AppCompatActivity {
      */
     private void setImageData(@NonNull Intent intent) {
         Uri inputUri = intent.getParcelableExtra(UCrop.EXTRA_INPUT_URI);
-        Uri outputUri = intent.getParcelableExtra(UCrop.EXTRA_OUTPUT_URI);
+        outputUri = intent.getParcelableExtra(UCrop.EXTRA_OUTPUT_URI);
         processOptions(intent);
 
-        if (inputUri != null && outputUri != null) {
+        if (inputUri != null) {
             try {
                 mGestureCropImageView.setImageUri(inputUri, outputUri);
             } catch (Exception e) {
@@ -679,6 +687,30 @@ public class UCropActivity extends AppCompatActivity {
                 finish();
             }
         });
+    }
+
+    protected void returnCropDetailsAndFinishActivity() {
+        mBlockingView.setClickable(true);
+        mShowLoader = true;
+        supportInvalidateOptionsMenu();
+
+        mGestureCropImageView.returnCropDetails(new BitmapCropDetailsCallback() {
+            @Override
+            public void onCropDetailsRetrieved(int offsetX, int offsetY, int imageWidth, int imageHeight) {
+                setResultUri(mGestureCropImageView.getTargetAspectRatio(), offsetX, offsetY, imageWidth, imageHeight);
+                finish();
+            }
+        });
+    }
+
+    protected void setResultUri(float resultAspectRatio, int offsetX, int offsetY, int imageWidth, int imageHeight) {
+        setResult(RESULT_OK, new Intent()
+                .putExtra(UCrop.EXTRA_OUTPUT_CROP_ASPECT_RATIO, resultAspectRatio)
+                .putExtra(UCrop.EXTRA_OUTPUT_IMAGE_WIDTH, imageWidth)
+                .putExtra(UCrop.EXTRA_OUTPUT_IMAGE_HEIGHT, imageHeight)
+                .putExtra(UCrop.EXTRA_OUTPUT_OFFSET_X, offsetX)
+                .putExtra(UCrop.EXTRA_OUTPUT_OFFSET_Y, offsetY)
+        );
     }
 
     protected void setResultUri(Uri uri, float resultAspectRatio, int offsetX, int offsetY, int imageWidth, int imageHeight) {

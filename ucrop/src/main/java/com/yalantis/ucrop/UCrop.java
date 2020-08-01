@@ -35,7 +35,7 @@ public class UCrop {
     public static final int RESULT_ERROR = 96;
     public static final int MIN_SIZE = 10;
 
-    private static final String EXTRA_PREFIX = BuildConfig.APPLICATION_ID;
+    private static final String EXTRA_PREFIX = BuildConfig.LIBRARY_PACKAGE_NAME;
 
     public static final String EXTRA_INPUT_URI = EXTRA_PREFIX + ".InputUri";
     public static final String EXTRA_OUTPUT_URI = EXTRA_PREFIX + ".OutputUri";
@@ -65,11 +65,22 @@ public class UCrop {
         return new UCrop(source, destination);
     }
 
+    public static UCrop of(@NonNull Uri source) {
+        return new UCrop(source);
+    }
+
     private UCrop(@NonNull Uri source, @NonNull Uri destination) {
         mCropIntent = new Intent();
         mCropOptionsBundle = new Bundle();
         mCropOptionsBundle.putParcelable(EXTRA_INPUT_URI, source);
         mCropOptionsBundle.putParcelable(EXTRA_OUTPUT_URI, destination);
+    }
+
+    private UCrop(@NonNull Uri source) {
+        mCropIntent = new Intent();
+        mCropOptionsBundle = new Bundle();
+        mCropOptionsBundle.putParcelable(EXTRA_INPUT_URI, source);
+        mCropOptionsBundle.putParcelable(EXTRA_OUTPUT_URI, null);
     }
 
     /**
