@@ -16,6 +16,7 @@ import com.yalantis.ucrop.model.ExifInfo;
 import com.yalantis.ucrop.util.BitmapLoadUtils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -89,6 +90,18 @@ public class BitmapLoadTask extends AsyncTask<Void, Void, BitmapLoadTask.BitmapW
 
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
+
+        try {
+            InputStream inputStream = mContext.getContentResolver().openInputStream(mInputUri);
+            BitmapFactory.decodeStream(inputStream, null, options);
+        } catch (OutOfMemoryError error) {
+            Log.e(TAG, "doInBackground: BitmapFactory.decodeFileDescriptor: ", error);
+            options.inSampleSize *= 2;
+        } catch (IOException e) {
+            Log.e(TAG, "doInBackground: ImageDecoder.createSource: ", e);
+            return new BitmapWorkerResult(new IllegalArgumentException("Bitmap could not be decoded from the Uri: [" + mInputUri + "]", e));
+        }
+
         options.inSampleSize = BitmapLoadUtils.calculateInSampleSize(options, mRequiredWidth, mRequiredHeight);
         options.inJustDecodeBounds = false;
 

@@ -242,6 +242,14 @@ public class UCrop {
         return intent.getIntExtra(EXTRA_OUTPUT_IMAGE_HEIGHT, -1);
     }
 
+    public static float getOutputOffsetX(@NonNull Intent intent) {
+        return intent.getIntExtra(EXTRA_OUTPUT_OFFSET_X, 0);
+    }
+
+    public static float getOutputOffsetY(@NonNull Intent intent) {
+        return intent.getIntExtra(EXTRA_OUTPUT_OFFSET_Y, 0);
+    }
+
     /**
      * Retrieve cropped image aspect ratio from the result Intent
      *
@@ -251,6 +259,8 @@ public class UCrop {
     public static float getOutputCropAspectRatio(@NonNull Intent intent) {
         return intent.getFloatExtra(EXTRA_OUTPUT_CROP_ASPECT_RATIO, 0f);
     }
+
+
 
     /**
      * Method retrieves error from the result intent.
