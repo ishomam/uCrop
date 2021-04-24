@@ -168,8 +168,12 @@ public class BitmapLoadTask extends AsyncTask<Void, Void, BitmapLoadTask.BitmapW
 //                if (mOutputUri == null) {
 //                    mOutputUri = mInputUri;
 //                } else {
-                    copyFile(mInputUri, mOutputUri);
+//                    copyFile(mInputUri, mOutputUri);
 //                }
+
+                if (mOutputUri != null) {
+                    copyFile(mInputUri, mOutputUri);
+                }
             } catch (NullPointerException | IOException e) {
                 Log.e(TAG, "Copying failed", e);
                 throw e;
