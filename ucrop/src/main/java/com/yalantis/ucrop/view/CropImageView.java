@@ -97,7 +97,7 @@ public class CropImageView extends TransformImageView {
         ExifInfo exifInfo = getExifInfo();
         Bitmap viewBitmap = getViewBitmap();
 //        String imageInputPath = getImageInputPath();
-        Uri imageUri = getImageUri();
+        Uri imageUri = getInputImageUri();
 
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
@@ -147,9 +147,9 @@ public class CropImageView extends TransformImageView {
         final CropParameters cropParameters = new CropParameters(
                 mMaxResultImageSizeX, mMaxResultImageSizeY,
                 compressFormat, compressQuality,
-                getImageInputPath(), getImageOutputPath(), getExifInfo());
+                getImageInputPath(), getImageOutputPath(), getInputImageUri(), getExifInfo());
 
-        new BitmapCropTask(getViewBitmap(), imageState, cropParameters, cropCallback)
+        new BitmapCropTask(getContext(), getViewBitmap(), imageState, cropParameters, cropCallback)
                 .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 

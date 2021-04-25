@@ -1,5 +1,6 @@
 package com.yalantis.ucrop.task;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.RectF;
@@ -15,6 +16,7 @@ import com.yalantis.ucrop.util.FileUtils;
 import com.yalantis.ucrop.util.ImageHeaderParser;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import androidx.annotation.NonNull;
@@ -49,12 +51,17 @@ public class BitmapCropTask extends AsyncTask<Void, Void, Throwable> {
     private final String mImageInputPath, mImageOutputPath;
     private final ExifInfo mExifInfo;
     private final BitmapCropCallback mCropCallback;
+    private final Uri inputImageUri;
 
     private int mCroppedImageWidth, mCroppedImageHeight;
     private int cropOffsetX, cropOffsetY;
+    private final Context context;
 
-    public BitmapCropTask(@Nullable Bitmap viewBitmap, @NonNull ImageState imageState, @NonNull CropParameters cropParameters,
+    public BitmapCropTask(Context context,
+                          @Nullable Bitmap viewBitmap, @NonNull ImageState imageState,
+                          @NonNull CropParameters cropParameters,
                           @Nullable BitmapCropCallback cropCallback) {
+        this.context = context;
 
         mViewBitmap = viewBitmap;
         mCropRect = imageState.getCropRect();
@@ -71,6 +78,8 @@ public class BitmapCropTask extends AsyncTask<Void, Void, Throwable> {
         mImageInputPath = cropParameters.getImageInputPath();
         mImageOutputPath = cropParameters.getImageOutputPath();
         mExifInfo = cropParameters.getExifInfo();
+
+        inputImageUri = cropParameters.getInputImageUri();
 
         mCropCallback = cropCallback;
     }
@@ -101,7 +110,14 @@ public class BitmapCropTask extends AsyncTask<Void, Void, Throwable> {
     private float resize() {
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(mImageInputPath, options);
+//        BitmapFactory.decodeFile(mImageInputPath, options);
+
+        try {
+            BitmapFactory.decodeStream(context.getContentResolver().openInputStream(inputImageUri),
+                    null, options);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
 
         boolean swapSides = mExifInfo.getExifDegrees() == 90 || mExifInfo.getExifDegrees() == 270;
         float scaleX = (swapSides ? options.outHeight : options.outWidth) / (float) mViewBitmap.getWidth();
