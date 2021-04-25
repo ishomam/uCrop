@@ -170,7 +170,6 @@ public class BitmapLoadTask extends AsyncTask<Void, Void, BitmapLoadTask.BitmapW
 //                } else {
 //                    copyFile(mInputUri, mOutputUri);
 //                }
-
                 if (mOutputUri != null) {
                     copyFile(mInputUri, mOutputUri);
                 }

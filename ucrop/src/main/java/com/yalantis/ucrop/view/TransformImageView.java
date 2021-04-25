@@ -55,6 +55,8 @@ public class TransformImageView extends AppCompatImageView {
     private String mImageInputPath, mImageOutputPath;
     private ExifInfo mExifInfo;
 
+    private Uri imageUri;
+
     /**
      * Interface for rotation and scale change notifying.
      */
@@ -137,6 +139,7 @@ public class TransformImageView extends AppCompatImageView {
      * @throws Exception - can throw exception if having problems with decoding Uri or OOM.
      */
     public void setImageUri(@NonNull Uri imageUri, @Nullable Uri outputUri) throws Exception {
+        this.imageUri = imageUri;
         int maxBitmapSize = getMaxBitmapSize();
 
         BitmapLoadUtils.decodeBitmapInBackground(getContext(), imageUri, outputUri, maxBitmapSize, maxBitmapSize,
@@ -160,6 +163,14 @@ public class TransformImageView extends AppCompatImageView {
                         }
                     }
                 });
+    }
+
+    public void setImageUri(Uri imageUri) {
+        this.imageUri = imageUri;
+    }
+
+    public Uri getImageUri() {
+        return imageUri;
     }
 
     /**

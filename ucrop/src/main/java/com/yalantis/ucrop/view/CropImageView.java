@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.AttributeSet;
 
@@ -25,6 +26,7 @@ import com.yalantis.ucrop.task.BitmapCropTask;
 import com.yalantis.ucrop.util.CubicEasing;
 import com.yalantis.ucrop.util.RectUtils;
 
+import java.io.FileNotFoundException;
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
 
@@ -94,11 +96,19 @@ public class CropImageView extends TransformImageView {
     private float resizeCurrentScale(float currentScale) {
         ExifInfo exifInfo = getExifInfo();
         Bitmap viewBitmap = getViewBitmap();
-        String imageInputPath = getImageInputPath();
+//        String imageInputPath = getImageInputPath();
+        Uri imageUri = getImageUri();
 
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(imageInputPath, options);
+//        BitmapFactory.decodeFile(imageInputPath, options);
+
+        try {
+            BitmapFactory.decodeStream(getContext().getContentResolver().openInputStream(imageUri),
+                    null, options);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
 
         boolean swapSides = exifInfo.getExifDegrees() == 90 || exifInfo.getExifDegrees() == 270;
         float scaleX = (swapSides ? options.outHeight : options.outWidth) / (float) viewBitmap.getWidth();
